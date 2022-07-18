@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The Relay API identifier for the task run"
+    },
+    "jobID": {
+      "type": "string",
+      "description": "If using Puppet Enterprise, the orchestrator job ID for the task run"
+    },
+    "results": {
+      "type": "string",
+      "description": "The results of the Puppet task or plan run as provided by the Puppet agent"
+    }
+  },
+  "required": [
+    "id"
+  ]
+}

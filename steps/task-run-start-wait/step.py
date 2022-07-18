@@ -60,3 +60,36 @@ if run['state'].get('job_id'):
     relay.outputs.set('results', run)
 
     logging.info('The Puppet Enterprise console may have more information for the job: {}'.format(run['state']['job_id']))
+
+if get_or_default(D.wait_for_results, True):
+    while True:
+        r = requests.get(urljoin(relay_api_url, '_puppet/runs/{}'.format(run['id'])), headers=headers)
+        r.raise_for_status()
+
+        run = r.json()
+        if run['state']['status'] != 'complete':
+            # XXX: FIXME: We need to take into account next_update_before to handle
+            # this properly.
+            logging.info('Run is not yet complete (currently {}), waiting...'.format(run['state']['status']))
+
+            time.sleep(5)
+            continue
+
+        if run['state'].get('job_id'):
+            relay.outputs.set('jobID', run['state']['job_id'])
+
+        if run['state'].get('outcome'):
+            relay.outputs.set('outcome', run['state']['outcome'])
+
+        if run['state'].get('run_results'):
+            relay.outputs.set('results', run['state']['run_results'])
+
+        if run['state'].get('outcome') == 'failed':
+            logging.error('Run complete with outcome {}'.format(run['state'].get('outcome', '(unknown)')))
+            if get_or_default(D.fail_on_fail, True):
+                raise "Failure in task. Check task output for errors."
+
+        else:
+            logging.info('Run complete with outcome {}'.format(run['state'].get('outcome', '(unknown)')))
+
+        break
